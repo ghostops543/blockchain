@@ -1,4 +1,5 @@
 import java.security.*;
+import java.util.ArrayList;
 import java.util.Base64;
 
 public class Utility {
@@ -38,7 +39,7 @@ public class Utility {
 
     public static boolean verifyECDSASig(PublicKey publicKey, String data, byte[] signature) {
         try{
-            Signature ecdsaVerify = Signature.getInstance("ESDCA", "BC");
+            Signature ecdsaVerify = Signature.getInstance("ECDSA", "BC");
             ecdsaVerify.initVerify(publicKey);
             ecdsaVerify.update(data.getBytes());
             return ecdsaVerify.verify(signature);
@@ -49,5 +50,26 @@ public class Utility {
     }
     public static String getStringFromKey(Key key) {
         return Base64.getEncoder().encodeToString(key.getEncoded());
+    }
+    public static String getDificultyString(int difficulty) {
+        return new String(new char[difficulty]).replace('\0', '0');
+    }
+    public static String getMerkleRoot(ArrayList<Transaction> transactions){
+        int count = 0;
+        ArrayList<String> previousTreeLayer = new ArrayList<String>();
+        for(Transaction transaction : transactions){
+            previousTreeLayer.add(transaction.transactionID);
+        }
+        ArrayList<String> treeLayer = previousTreeLayer;
+        while(count > 1){
+            treeLayer = new ArrayList<String>();
+            for(int i = 0; i <previousTreeLayer.size(); i++){
+                treeLayer.add(applyEncrption(previousTreeLayer.get(i-1))+ previousTreeLayer.get(i));
+            }
+            count = treeLayer.size();
+            previousTreeLayer = treeLayer;
+        }
+        String merkleRoot = (treeLayer.size() == 1) ? treeLayer.get(0) : "";
+        return merkleRoot;
     }
 }
